@@ -32,6 +32,8 @@ The process follow this steps:
 
 Users can also edit files and upload to ESP, via "/send_file" endpoint. So it's possible, for example, to edit "known_wifis.txt" with yours WiFis, in this case following template per line "name\tpasswd\n", as well as HTML files.
 
+The dev can also uncomment the `#define IP_ON_BLUETOOTH_NAME` to provide to users the IP to connect to via Bluetooth name (12. bluetooth_ap_mode.png and 13. bluetooth_station_mode.png), but including this feature needs a lot of flash space, so you need to configure a huge app partition scheme (14. partition_hudge_app.png).
+
 ![01. firts_scan_wifi.png](https://raw.githubusercontent.com/JuniorPolegato/ESPUserConnection/main/assets/01.%20firts_scan_wifi.png)
 ![02. no_wifi_match.png](https://raw.githubusercontent.com/JuniorPolegato/ESPUserConnection/main/assets/02.%20no_wifi_match.png)
 ![03. enable_ap_mode.png](https://raw.githubusercontent.com/JuniorPolegato/ESPUserConnection/main/assets/03.%20enable_ap_mode.png)
@@ -43,6 +45,9 @@ Users can also edit files and upload to ESP, via "/send_file" endpoint. So it's 
 ![09. wifi_match.png](https://raw.githubusercontent.com/JuniorPolegato/ESPUserConnection/main/assets/09.%20wifi_match.png)
 ![10. wifi_connected.png](https://raw.githubusercontent.com/JuniorPolegato/ESPUserConnection/main/assets/10.%20wifi_connected.png)
 ![11. access_via_new_ip.png](https://raw.githubusercontent.com/JuniorPolegato/ESPUserConnection/main/assets/11.%20access_via_new_ip.png)
+![12. bluetooth_ap_mode](https://raw.githubusercontent.com/JuniorPolegato/ESPUserConnection/main/assets/12.%20bluetooth_ap_mode.png)
+![13. bluetooth_station_mode](https://raw.githubusercontent.com/JuniorPolegato/ESPUserConnection/main/assets/13.%20bluetooth_station_mode.png)
+![14. partition_hudge_app](https://raw.githubusercontent.com/JuniorPolegato/ESPUserConnection/main/assets/14.%20partition_hudge_app.png)
 
 ## Customizations
 I share this code template for you aggregate with or start your project to provide a easy way to user connect the ESP to a WLAN.

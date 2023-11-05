@@ -5,6 +5,11 @@
 #include "ESPUserConnection.h"
 #include "fs_operations.h"
 
+#ifdef IP_ON_BLUETOOTH_NAME
+    #include <BluetoothSerial.h>
+    BluetoothSerial SerialBT;
+#endif
+
 AsyncWebServer webserver(80);
 bool webserver_configured = false;
 void user_request_data(AsyncWebServerRequest *request, bool restart=true);
@@ -171,6 +176,12 @@ void start_AP() {
                   "network for your\n"
                   + String(PROJECT_NAME) + "\n\n"
                   "Waiting for you...\n");
+
+#ifdef IP_ON_BLUETOOTH_NAME
+    SerialBT.end();
+    SerialBT.begin("ESP32 " + ip.toString());
+#endif
+
     delay(1000);
 }
 
@@ -313,6 +324,11 @@ bool connect_wifi(bool force_ap_mode){
     output->println("\n\nWiFi connected!");
     output->println("\nIP address:");
     output->println(WiFi.localIP());
+
+#ifdef IP_ON_BLUETOOTH_NAME
+    SerialBT.end();
+    SerialBT.begin("ESP32 " + WiFi.localIP().toString());
+#endif
 
     webserver.begin();
 
