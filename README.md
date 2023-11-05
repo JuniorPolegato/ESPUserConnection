@@ -63,8 +63,8 @@ The output can be changed from Serial to TFT, by uncommenting in "ESPUserConnect
 For a practical use of this code, customizations and TFT, you can see [TTGOWeatherStation](https://github.com/JuniorPolegato/TTGOWeatherStation)
 
 
-## File simplified operations
-There is a group of functions to easy access to files:
+## Simplified ESP file system operations
+There is also a group of functions in "fs_operations.h" to access files easier:
 ```
 bool writeFile(String path, String message, const bool overwrite=false);
 String readFile(String path);
