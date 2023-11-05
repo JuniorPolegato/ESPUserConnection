@@ -1,5 +1,3 @@
-#include <WiFi.h>
-#include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>  // https://github.com/JuniorPolegato/ESPAsyncWebServer
 
 #include "ESPUserConnection.h"
@@ -12,30 +10,13 @@
 
 AsyncWebServer webserver(80);
 bool webserver_configured = false;
-void user_request_data(AsyncWebServerRequest *request, bool restart=true);
 
 // This is an example to request also a key to the user via html page
 #ifdef CUSTOM_USER_REQUEST_DATA
-void custom_user_request_data(AsyncWebServerRequest *request) {
-    int params = request->params();
-
-    if (params >= 3) {
-        String key = request->getParam(2)->value();
-
-        if (key.length() == 32)
-            writeFile("/key.txt", key, true);
-
-        else if (key == "delete")
-            deleteFile("/key.txt");
-
-        user_request_data(request);
-    }
-    else
-        request->send(500);
-}
+extern void custom_user_request_data(AsyncWebServerRequest *request);
 #endif  // CUSTOM_USER_REQUEST_DATA
 
-void user_request_data(AsyncWebServerRequest *request, bool restart) {
+void user_request_data(AsyncWebServerRequest *request, bool restart=true) {
     int params = request->params();
 
     if (params >= 2) {
@@ -71,6 +52,8 @@ void user_request_data(AsyncWebServerRequest *request, bool restart) {
 }
 
 // Settings for your TFT device and/or Serial
+#define PRINT if (WiFi.status() != WL_CONNECTED) output->print
+#define PRINTLN if (WiFi.status() != WL_CONNECTED) output->println
 #ifdef OUTPUT_IS_TFT
     #include <TFT_eSPI.h>
     TFT_eSPI *output;
@@ -78,65 +61,66 @@ void user_request_data(AsyncWebServerRequest *request, bool restart) {
     #define output (&Serial)
     // Configure how to clear screen on your serial terminal
     // This line clear screen for https://github.com/JuniorPolegato/gtkterm
-    #define SERIAL_CLEAR_SCREEN_COMMAND Serial.print('\x1b')
+    #define SERIAL_CLEAR_SCREEN_COMMAND PRINT('\x1b')
 #endif  // OUTPUT_IS_TFT
 
-
 void clear(){
+    if (WiFi.status() != WL_CONNECTED) {
 #ifdef OUTPUT_IS_TFT
-    output->fillRect(0, 0, output->getViewportWidth(), output->getViewportHeight(), TFT_BACKGROUND);
-    output->setTextColor(TFT_TEXT_COLOR);
-    output->setCursor(0, 0);
+        output->fillRect(0, 0, output->getViewportWidth(), output->getViewportHeight(), TFT_BACKGROUND);
+        output->setTextColor(TFT_TEXT_COLOR);
+        output->setCursor(0, 0);
 #else
     SERIAL_CLEAR_SCREEN_COMMAND;
 #endif  // OUTPUT_IS_TFT
-    output->println(PROJECT_NAME);
-    output->println();
+        PRINTLN(PROJECT_NAME);
+        PRINTLN();
+    }
 }
 
 String scan(){
-    String resp = "[";
+    String resp;
     String ssid;
     int scan_status = WiFi.scanComplete();
 
     clear();
-    output->println("Searching Wi-Fi...\n");
+    PRINTLN("Searching Wi-Fi...\n");
 
     if (scan_status == WIFI_SCAN_FAILED) {
-        output->println("Starting...\n");
+        PRINTLN("Starting...\n");
         WiFi.scanNetworks(true);
         delay(1000);
     }
 
     while ((scan_status = WiFi.scanComplete()) == WIFI_SCAN_RUNNING) {
-        output->print('.'); output->flush();
+        PRINT('.'); output->flush();
         delay(100);
     }
-    output->println();
+    PRINTLN();
 
     if (scan_status == WIFI_SCAN_FAILED) {
-        output->println("Wait a moment...");
+        PRINTLN("Wait a moment...");
         return "[{\"name\":\"Trying again...\","
                  "\"quality\":\"Wait a moment...\","
                  "\"security\":\"Wait a moment...\"}]";
     }
 
-    output->println("Networks found: " + String(scan_status));
+    PRINTLN("Networks found: " + String(scan_status));
     for (int  i = 0; i < scan_status; i++) {
-        resp += String(i ? ",{" : "{") +
+        resp += ",{"
                 "\"name\":\"" + WiFi.SSID(i) + "\","
                 "\"quality\":" + WiFi.RSSI(i) + ","
                 "\"security\":" + WiFi.encryptionType(i) + "}";
-        if (i < 20) output->println(WiFi.SSID(i) + '[' + WiFi.RSSI(i) + ']');
+        if (i < 20) PRINTLN(WiFi.SSID(i) + '[' + WiFi.RSSI(i) + ']');
     }
 
     WiFi.scanDelete();
 
-    return resp + ']';
+    return '[' + resp.substring(1) + ']';
 }
 
 void upload_handler(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
-    output->println(filename + '[' + len + ']');
+    PRINTLN(filename + '[' + len + ']');
 
     if (!index) {
         String filepath = filename;
@@ -158,7 +142,7 @@ void upload_handler(AsyncWebServerRequest *request, String filename, size_t inde
 
 void start_AP() {
     clear();
-    output->println("Connect your\n"
+    PRINTLN("Connect your\n"
                     "Wi-Fi device to:\n\n"
                     + String(PROJECT_NAME) + "\n\n"
                     "Password: 12345678\n");
@@ -170,7 +154,7 @@ void start_AP() {
     delay(1000);
 
     webserver.begin();
-    output->println("Then access:\n\n"
+    PRINTLN("Then access:\n\n"
                   "http://" + ip.toString() + "/wifi\n\n"
                   "and select Wi-Fi\n"
                   "network for your\n"
@@ -190,27 +174,7 @@ void config_webserver() {
         if (findFile("/index.html"))
             request->send(LittleFS, "/index.html", "text/html");
         else {
-            output->println("Send \"index.html\" file!");
-            request->send(200, "text/html", sendfiles_html);
-        }
-    });
-
-    webserver.on("/wifi", HTTP_GET, [](AsyncWebServerRequest *request) {
-#ifdef CUSTOM_USER_REQUEST_DATA
-        String user_config = "/custom_user_config.html";
-#else
-        String user_config = "/user_config.html";
-#endif  // CUSTOM_USER_REQUEST_DATA
-        if (findFile(user_config)) {
-            output->println("Now select a Wi-Fi\n"
-                            "network for ESP\n"
-                            "connect to\n");
-            request->send(LittleFS, user_config, "text/html");
-        }
-        else {
-            output->println("First access.\n"
-                            "It's needed to\n"
-                            "send \"" + user_config.substring(1) + "\".\n");
+            PRINTLN("Send \"index.html\" file!");
             request->send(200, "text/html", sendfiles_html);
         }
     });
@@ -220,7 +184,29 @@ void config_webserver() {
         request->send(200, "application/json", scan());
     });
 
-    webserver.on("/add_wifi_network", HTTP_POST, [](AsyncWebServerRequest *request) {
+    webserver.on("/wifi", HTTP_GET, [](AsyncWebServerRequest *request) {
+#ifdef CUSTOM_USER_REQUEST_DATA
+        String user_config = "/custom_user_config.html";
+#else
+        String user_config = "/user_config.html";
+#endif  // CUSTOM_USER_REQUEST_DATA
+        if (findFile(user_config)) {
+            PRINTLN(
+                "Now select a Wi-Fi\n"
+                "network for ESP\n"
+                "connect to\n");
+            request->send(LittleFS, user_config, "text/html");
+        }
+        else {
+            PRINTLN(
+                "First access.\n"
+                "It's needed to\n"
+                "send \"" + user_config.substring(1) + "\".\n");
+            request->send(200, "text/html", sendfiles_html);
+        }
+    });
+
+    webserver.on("/wifi", HTTP_POST, [](AsyncWebServerRequest *request) {
 #ifdef CUSTOM_USER_REQUEST_DATA
         custom_user_request_data(request);
 #else
@@ -230,12 +216,12 @@ void config_webserver() {
 
     webserver.on("/send_file", HTTP_GET, [](AsyncWebServerRequest *request) {
         request->send(200, "text/html", sendfiles_html);
-        output->println("Ready to send a file!");
+        PRINTLN("Ready to send a file!");
     });
 
     webserver.on("/send_file", HTTP_POST, [](AsyncWebServerRequest *request) {
         clear();
-        output->println("Uploading the file...");
+        PRINTLN("Uploading the file...");
         request->send(200);
     }, upload_handler);
 
@@ -245,16 +231,14 @@ void config_webserver() {
 }
 
 #ifdef OUTPUT_IS_TFT
-bool connect_wifi(void *tft, bool force_ap_mode){
+bool connect_wifi(void *tft, bool force_ap_mode, bool show_connected_ip){
     output = (TFT_eSPI*)tft;
 #else
-bool connect_wifi(bool force_ap_mode){
+bool connect_wifi(bool force_ap_mode, bool show_connected_ip){
 #endif  // OUTPUT_IS_TFT
 
-    String list, wifi, passwd, known_wifis;
+    String wifi, passwd, known_wifis;
     int i = 0, d;  // i = inital line position | d = position of delimiter \t
-
-    WiFi.scanNetworks(true);
 
     if (webserver_configured)
         webserver.end();
@@ -262,68 +246,49 @@ bool connect_wifi(bool force_ap_mode){
         config_webserver();
 
     if (force_ap_mode) {
-        output->println("Forcing AP Mode!\n");
+        PRINTLN("Forcing AP Mode!\n");
         WiFi.disconnect(false, true);
         delay(1000);
         start_AP();
         return false;
     }
 
-    while ((list = scan()).indexOf("Trying again...") > 0)
-        delay(3000);
-
-    delay(1000);
     known_wifis = readFile("/known_wifis.txt");
     while (WiFi.status() != WL_CONNECTED) {
         clear();
-        output->println("Matching known WiFi:\n");
-        for (;;) {
-            d = known_wifis.indexOf('\t', i);
-            if (d == -1)
-                break;
 
-            wifi = known_wifis.substring(i, d++);
+        d = known_wifis.indexOf('\t', i);
+        wifi = known_wifis.substring(i, d);
+        PRINTLN(wifi);
 
-            if (list.indexOf('"' + wifi + '"') != -1) {  // WiFi name match
-                output->println("\n* " + wifi + " *\n");
-                break;
-            }
-            output->println(wifi + "\n  \\--> out of range");
+        i = d == -1 ? -1 : known_wifis.indexOf('\n', ++d);
 
-            i = known_wifis.indexOf('\n', d);
-            if (i == -1)
-                break;
-            i++;
-        }
-
-        if (i == -1 || d == -1) {  // No known wi-fi found
-            output->println("\n\nNo known WiFi\n\nmatches in the\n\nneighborhood.\n");
+        if (i == -1) {  // No known wi-fi found
+            PRINTLN("\n\nNo known WiFi\n\nmatches in the\n\nneighborhood.\n");
             WiFi.disconnect(false, true);
             delay(1000);
             start_AP();
             return false;
         }
 
-        i = known_wifis.indexOf('\n', d);
-        passwd = known_wifis.substring(d, i == -1 ? known_wifis.length() : i++);
+        passwd = known_wifis.substring(d, i++);
+        // PRINTLN("  \->|" + passwd + "|");
 
-        delay(1000);
-        clear();
-        output->println("* " + wifi + " *\n");
-        // output->println("-*-|" + passwd + "|-*-\n");
-        output->print("Connecting...");
+        PRINT("Connecting...");
         WiFi.begin(wifi, passwd == "open" ? (const char *)NULL : passwd.c_str());
 
         d = 0;
-        while (WiFi.status() != WL_CONNECTED && d++ < 30) {
+        while (WiFi.status() != WL_CONNECTED && d++ < 20) {
             delay(500);
-            output->print("."); output->flush();
+            PRINT("."); output->flush();
         }
     }
 
-    output->println("\n\nWiFi connected!");
-    output->println("\nIP address:");
-    output->println(WiFi.localIP());
+    if (show_connected_ip) {
+        output->println("\n\nWiFi connected!");
+        output->println("\nIP address:");
+        output->println(WiFi.localIP());
+    }
 
 #ifdef IP_ON_BLUETOOTH_NAME
     SerialBT.end();
@@ -332,6 +297,5 @@ bool connect_wifi(bool force_ap_mode){
 
     webserver.begin();
 
-    delay(1000);
     return true;
 }

@@ -90,9 +90,9 @@ const char go_back_html[] PROGMEM = R"===(
 #endif  // CUSTOM_USER_REQUEST_DATA
 
 #ifdef OUTPUT_IS_TFT
-bool connect_wifi(void *tft, bool force_ap_mode=false);
+bool connect_wifi(void *tft, bool force_ap_mode=false, bool show_connected_ip=true);
 #else
-bool connect_wifi(bool force_ap_mode=false);
+bool connect_wifi(bool force_ap_mode=false, bool show_connected_ip=true);
 #endif  // OUTPUT_IS_TFT
 
 #endif // ESP_USER_CONNECTION_H

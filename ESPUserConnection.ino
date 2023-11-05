@@ -6,4 +6,6 @@ void setup() {
 }
 
 void loop () {
+    Serial.print("(-.-) ");
+    delay(1000);
 }

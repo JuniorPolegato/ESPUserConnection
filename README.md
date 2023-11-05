@@ -19,7 +19,7 @@ void loop () {
 ## How it works
 
 The process follow this steps:
-- First of all, scan for WiFi networks on the neabor (01. firts_scan_wifi.png);
+- ~First of all, scan for WiFi networks on the neabor (01. firts_scan_wifi.png);~ I removed it, very slow boot;
 - Then read a list of known WiFi and try to connect the matches (02. no_wifi_match.png);
 - If no connection is possible and/or no match WiFi name, enable AP Mode (03. enable_ap_mode.png);
 - So the user can connect to AP and access the WiFi configuration page, but you need on first access (04. first_access.png) upload the files "user_config.html" (05. send_user_config_html.png) and "index.html" (06. send_index_html.png), just one time;
@@ -27,7 +27,7 @@ The process follow this steps:
 - And can click over one specific network name to connect to and enter the password (08. select_wifi_and_type_password_restart.png);
 - User can also type a WiFi name, for example, if the ESP will be connect to smartphone hotspot, then first of all user must to connect to AP, so type the smartphone WiFi hotspot name and password;
 - Restarting, the WiFi configured will be found, get match (09. wifi_match.png);
-- Then the ESP will connect to configured WiFi (10. wifi_connected.png);
+- Then the ESP will connect to configured WiFi (10. wifi_connected.png), trying about 10 seconds;
 - Now the user can access ESP WebServer via new WLAN IP and edit/delete known WiFi (11. access_via_new_ip.png).
 
 Users can also edit files and upload to ESP, via "/send_file" endpoint. So it's possible, for example, to edit "known_wifis.txt" with yours WiFis, in this case following template per line "name\tpasswd\n", as well as HTML files.
@@ -54,9 +54,9 @@ I share this code template for you aggregate with or start your project to provi
 
 This code configure a WebServer, using [ESPAsyncWebServer](https://github.com/JuniorPolegato/ESPAsyncWebServer), so you can add some html/js/css and images to you project, customizing the index.html and/or creating new endpoints.
 
-The endpoints "/wifi", "/scan", "/add_wifi_network" and "/send_file" are used by ESP User Connection.
+The endpoints "/wifi", "/scan" and "/send_file" are used by ESP User Connection.
 
-You can also easy request more data to the user without edit original code by uncommenting the line "`#define CUSTOM_USER_REQUEST_DATA`" in "ESPUserConnection.h", so you can edit custom "sendfiles_html" and "go_back_html" also in "ESPUserConnection.h", plus a copy of "user_config.html" with name "custom_user_config.html" and also edit "custom_user_request_data" in "ESPUserConnection.cpp", there is here a example to request a field (key) to user with 32 characters.
+You can also easy request more data to the user, together with WiFi data, without edit original code by uncommenting the line "`#define CUSTOM_USER_REQUEST_DATA`" in "ESPUserConnection.h", so you can edit custom "sendfiles_html" and "go_back_html" also in "ESPUserConnection.h", plus a copy of "user_config.html" with name "custom_user_config.html" and also edit external function "custom_user_request_data" on any other code file, it will be called in "ESPUserConnection.cpp", there is here a example to request a field (key) to user, on the WiFi interface, with 32 characters in [TTGOWeatherStation](https://github.com/JuniorPolegato/TTGOWeatherStation).
 
 The output can be changed from Serial to TFT, by uncommenting in "ESPUserConnection.h" the lines:
 ```
@@ -65,7 +65,7 @@ The output can be changed from Serial to TFT, by uncommenting in "ESPUserConnect
 #define TFT_TEXT_COLOR TFT_YELLOW
 ```
 
-For a practical use of this code, customizations and TFT, you can see [TTGOWeatherStation](https://github.com/JuniorPolegato/TTGOWeatherStation)
+For a practical use of this code, customizations and TFT, you can see [TTGOWeatherStation](https://github.com/JuniorPolegato/TTGOWeatherStation).
 
 
 ## Simplified ESP file system operations
