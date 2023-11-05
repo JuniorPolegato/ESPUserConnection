@@ -24,7 +24,7 @@ The process follow this steps:
 - If no connection is possible and/or no match WiFi name, enable AP Mode (03. enable_ap_mode.png);
 - So the user can connect to AP and access the WiFi configuration page, but you need on first access (04. first_access.png) upload the files "user_config.html" (05. send_user_config_html.png) and "index.html" (06. send_index_html.png), just one time;
 - Now the user can see the WiFi list on navigator (07. acess_wifi_list.png);
-- Can click over one specific network name to connect to and enter password (08. select_wifi_and_type_password_restart.png);
+- And can click over one specific network name to connect to and enter the password (08. select_wifi_and_type_password_restart.png);
 - User can also type a WiFi name, for example, if the ESP will be connect to smartphone hotspot, then first of all user must to connect to AP, so type the smartphone WiFi hotspot name and password;
 - Restarting, the WiFi configured will be found, get match (09. wifi_match.png);
 - Then the ESP will connect to configured WiFi (10. wifi_connected.png);

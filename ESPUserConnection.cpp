@@ -259,7 +259,7 @@ bool connect_wifi(bool force_ap_mode){
     }
 
     while ((list = scan()).indexOf("Trying again...") > 0)
-        delay(1000);
+        delay(3000);
 
     delay(1000);
     known_wifis = readFile("/known_wifis.txt");
